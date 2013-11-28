@@ -1,0 +1,13 @@
+{application, hooks,
+ [
+  {description, "hook engine"},
+  {vsn, git},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib,
+                  logger
+                 ]},
+  {mod, { hooks, []}},
+  {env, []}
+ ]}.
