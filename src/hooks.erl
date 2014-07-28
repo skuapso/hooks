@@ -52,7 +52,7 @@ install(_Event, _Weight, []) ->
 install(Event, Weight, [H | T]) ->
   install(Event, Weight, H),
   install(Event, Weight, T);
-install(Event, Weight, HookFun) when (is_function(HookFun) and is_integer(Weight)) ->
+install(Event, Weight, HookFun) when is_integer(Weight) ->
   true = ets:insert(?MODULE, {{Event, Weight}, HookFun}),
   debug("installed hook ~w function handler ~w with weight ~w", [Event, HookFun, Weight]),
   ok.
@@ -200,8 +200,10 @@ stop(_State) ->
 %%%===================================================================
 run_hooks([], _Params, Answers, _Timeout) ->
   lists:reverse(Answers);
-run_hooks([H | T], Params, Answers, Timeout) when is_function(H)->
-  case erlang:apply(H, Params ++ [Timeout]) of
+run_hooks([{Module, Fun} | T], Params, Answers, Timeout) ->
+  {Time, ModAnswer} = timer:tc(Module, Fun, Params ++ [Timeout]),
+  debug("~w:~w runtime ~wms", [Module, Fun, Time/1000]),
+  case ModAnswer of
     stop            -> run_hooks([], Params, Answers, Timeout);
     {stop, Answer}  -> run_hooks([], Params, [Answer | Answers], Timeout);
     ok              -> run_hooks(T, Params, Answers, Timeout);
