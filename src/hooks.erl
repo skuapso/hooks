@@ -54,7 +54,7 @@ install(Event, Weight, [H | T]) ->
   install(Event, Weight, T);
 install(Event, Weight, HookFun) when is_integer(Weight) ->
   true = ets:insert(?MODULE, {{Event, Weight}, HookFun}),
-  debug("installed hook ~w function handler ~w with weight ~w", [Event, HookFun, Weight]),
+  '_debug'("installed hook ~w function handler ~w with weight ~w", [Event, HookFun, Weight]),
   ok.
 
 list() ->
@@ -79,12 +79,12 @@ run(Event, Params) ->
   run(self(), Event, Params, 5000).
 
 run(Pid, Event, Params) when is_pid(Pid) ->
-  run(Pid, Event, Params, infinity);
+  run(Pid, Event, Params, 5000);
 run(Event, Params, Timeout) ->
   run(self(), Event, Params, Timeout).
 
 run(Pid, Event, Params, Timeout) when is_list(Params) ->
-  debug("running handlers for hook ~w with params ~w", [Event, Params]),
+  '_debug'("running handlers for hook ~w with params ~w", [Event, Params]),
   Hooks = lists:flatten(ets:match(?MODULE, {{Event, '_'}, '$1'})),
   run_hooks(Hooks, [Pid | Params], [], Timeout).
 
@@ -94,7 +94,7 @@ run_final(Reason) ->
 run_final(Pid, Reason) ->
   case lists:flatten(ets:match(?MODULE, {{final, Pid}, '$1'})) of
     [] ->
-      debug("deleting options for ~w", [Pid]),
+      '_debug'("deleting options for ~w", [Pid]),
       hooks_options:delete(Pid),
       ok;
     [Event] ->
@@ -130,7 +130,7 @@ delete(Key) ->
 %%
 %% @spec start(StartType, StartArgs) -> {ok, Pid} |
 %%                                      {ok, Pid, State} |
-%%                                      {error, Reason}
+%%                                      {'_err'or, Reason}
 %%      StartType = normal | {takeover, Node} | {failover, Node}
 %%      StartArgs = term()
 %% @end
@@ -139,15 +139,15 @@ start() ->
   application:start(?MODULE).
 
 start(_StartType, _StartArgs) ->
-  trace("starting application"),
+  '_trace'("starting application"),
   ?MODULE:start_link().
 
 start_link() ->
-  trace("starting supervisor"),
+  '_trace'("starting supervisor"),
   supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 init([]) ->
-  trace("creating ets table"),
+  '_trace'("creating ets table"),
   ets:new(?MODULE, [ordered_set, public, named_table]),
   {
     ok,
@@ -202,7 +202,7 @@ run_hooks([], _Params, Answers, _Timeout) ->
   lists:reverse(Answers);
 run_hooks([{Module, Fun} | T], Params, Answers, Timeout) ->
   {Time, ModAnswer} = timer:tc(Module, Fun, Params ++ [Timeout]),
-  debug("~w:~w runtime ~wms", [Module, Fun, Time/1000]),
+  '_debug'("~w:~w runtime ~wms", [Module, Fun, Time/1000]),
   case ModAnswer of
     stop            -> run_hooks([], Params, Answers, Timeout);
     {stop, Answer}  -> run_hooks([], Params, [Answer | Answers], Timeout);

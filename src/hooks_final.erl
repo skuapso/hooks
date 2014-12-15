@@ -29,7 +29,7 @@ link(Pid) ->
 %% @doc
 %% Starts the server
 %%
-%% @spec start_link() -> {ok, Pid} | ignore | {error, Error}
+%% @spec start_link() -> {ok, Pid} | ignore | {'_err'or, Error}
 %% @end
 %%--------------------------------------------------------------------
 start_link() ->
@@ -51,7 +51,7 @@ start_link() ->
 %% @end
 %%--------------------------------------------------------------------
 init([]) ->
-  trace("init"),
+  '_trace'("init"),
   process_flag(trap_exit, true),
   {ok, #state{}}.
 
@@ -70,7 +70,7 @@ init([]) ->
 %% @end
 %%--------------------------------------------------------------------
 handle_call(Request, From, State) ->
-  warning("unhandled request ~w from ~w" , [Request, From]),
+  '_warning'("unhandled request ~w from ~w" , [Request, From]),
   {noreply, State}.
 
 %%--------------------------------------------------------------------
@@ -87,7 +87,7 @@ handle_cast({link, Pid}, State) when is_pid(Pid) ->
   erlang:link(Pid),
   {noreply, State};
 handle_cast(Msg, State) ->
-  warning("unhandled cast ~w", [Msg]),
+  '_warning'("unhandled cast ~w", [Msg]),
   {noreply, State}.
 
 %%--------------------------------------------------------------------
@@ -95,18 +95,18 @@ handle_cast(Msg, State) ->
 %% @doc
 %% Handling all non call/cast messages
 %%
-%% @spec handle_info(Info, State) -> {noreply, State} |
+%% @spec handle_'_info'(Info, State) -> {noreply, State} |
 %%                                   {noreply, State, Timeout} |
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
 handle_info({'EXIT', Pid, Reason}, State) when is_pid(Pid) ->
-  trace("running for ~w", [Pid]),
-  trace("reason is ~w", [Reason]),
+  '_trace'("running for ~w", [Pid]),
+  '_trace'("reason is ~w", [Reason]),
   hooks:run_final(Pid, Reason),
   {noreply, State};
 handle_info(Info, State) ->
-  warning("unhandled info ~w", [Info]),
+  '_warning'("unhandled info ~w", [Info]),
   {noreply, State}.
 
 %%--------------------------------------------------------------------

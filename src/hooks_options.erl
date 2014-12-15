@@ -28,12 +28,12 @@
 %%% API
 %%%===================================================================
 delete(Pid) ->
-  trace("deleting hooks"),
+  '_trace'("deleting hooks"),
   Opts = [Val || [Val] <- ets:match(?MODULE, {{Pid, '$1'}, '_'})],
-  debug("found hooks: ~w", [Opts]),
+  '_debug'("found hooks: ~w", [Opts]),
   lists:map(
     fun (X) ->
-        debug("deleting ~w", [{Pid, X}]),
+        '_debug'("deleting ~w", [{Pid, X}]),
         ets:delete(?MODULE, {Pid, X})
     end,
     Opts),
@@ -50,7 +50,7 @@ set(Pid, Key, Value) ->
   OldVal.
 
 get(Pid, Key) ->
-  trace("getting ~w", [{Pid, Key}]),
+  '_trace'("getting ~w", [{Pid, Key}]),
   case ets:match(?MODULE, {{Pid, Key}, '$1'}) of
     [] ->
       undefined;
@@ -61,7 +61,7 @@ get(Pid, Key) ->
 %% @doc
 %% Starts the server
 %%
-%% @spec start_link() -> {ok, Pid} | ignore | {error, Error}
+%% @spec start_link() -> {ok, Pid} | ignore | {'_err'or, Error}
 %% @end
 %%--------------------------------------------------------------------
 start_link() ->
@@ -83,7 +83,7 @@ start_link() ->
 %% @end
 %%--------------------------------------------------------------------
 init([]) ->
-  trace("init"),
+  '_trace'("init"),
   process_flag(trap_exit, true),
   ets:new(?MODULE, [public, set, named_table]),
   {ok, #state{}}.
@@ -103,7 +103,7 @@ init([]) ->
 %% @end
 %%--------------------------------------------------------------------
 handle_call(Request, From, State) ->
-  warning("unhandled call ~w from ~w", [Request, From]),
+  '_warning'("unhandled call ~w from ~w", [Request, From]),
   Reply = ok,
   {reply, Reply, State}.
 
@@ -118,7 +118,7 @@ handle_call(Request, From, State) ->
 %% @end
 %%--------------------------------------------------------------------
 handle_cast(Msg, State) ->
-  warning("unhandled cast ~w", [Msg]),
+  '_warning'("unhandled cast ~w", [Msg]),
   {noreply, State}.
 
 %%--------------------------------------------------------------------
@@ -126,13 +126,13 @@ handle_cast(Msg, State) ->
 %% @doc
 %% Handling all non call/cast messages
 %%
-%% @spec handle_info(Info, State) -> {noreply, State} |
+%% @spec handle_'_info'(Info, State) -> {noreply, State} |
 %%                                   {noreply, State, Timeout} |
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
 handle_info(Info, State) ->
-  warning("unhandled info ~w", [Info]),
+  '_warning'("unhandled '_info' ~w", [Info]),
   {noreply, State}.
 
 %%--------------------------------------------------------------------

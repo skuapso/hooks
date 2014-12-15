@@ -27,7 +27,7 @@ run(Pid, Event, Reason) ->
 %% @doc
 %% Starts the server
 %%
-%% @spec start_link() -> {ok, Pid} | ignore | {error, Error}
+%% @spec start_link() -> {ok, Pid} | ignore | {'_err'or, Error}
 %% @end
 %%--------------------------------------------------------------------
 start_link() ->
@@ -54,11 +54,11 @@ init([]) ->
   {ok, #state{}}.
 
 init(Pid, Event, Reason) ->
-  trace("init"),
+  '_trace'("init"),
   proc_lib:init_ack({ok, self()}),
-  trace("running hook"),
+  '_trace'("running hook"),
   hooks:run(Pid, Event, [Reason], infinity),
-  trace("exiting"),
+  '_trace'("exiting"),
   ok.
 
 %%--------------------------------------------------------------------
@@ -90,7 +90,7 @@ handle_call(_Request, _From, State) ->
 %% @end
 %%--------------------------------------------------------------------
 handle_cast({finalize, Pid, Event, Reason}, State) ->
-  trace("starting finalize for ~w (~w)", [Pid, Event]),
+  '_trace'("starting finalize for ~w (~w)", [Pid, Event]),
   case ets:match(?MODULE, {'$1', {Pid, '_', '_'}}) of
     [] ->
       {ok, FPid} = start_link(Pid, Event, Reason),
@@ -106,13 +106,13 @@ handle_cast(_Msg, State) ->
 %% @doc
 %% Handling all non call/cast messages
 %%
-%% @spec handle_info(Info, State) -> {noreply, State} |
+%% @spec handle_'_info'(Info, State) -> {noreply, State} |
 %%                                   {noreply, State, Timeout} |
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
 handle_info({'EXIT', FPid, normal}, State) ->
-  trace("~w finilized", [FPid]),
+  '_trace'("~w finilized", [FPid]),
   [[Pid]] = ets:match(?MODULE, {FPid, {'$1', '_', '_'}}),
   ets:delete(?MODULE, FPid),
   hooks:uninstall(final, Pid),
@@ -120,12 +120,12 @@ handle_info({'EXIT', FPid, normal}, State) ->
   {noreply, State};
 handle_info({'EXIT', FPid, FReason}, State) ->
   [[Pid, Event, Reason]] = ets:match(?MODULE, {FPid, {'$1', '$2', '$3'}}),
-  warning("~w finalization failed: ~w", [Pid, FReason]),
+  '_warning'("~w finalization failed: ~w", [Pid, FReason]),
   ets:delete(?MODULE, FPid),
   run(Pid, Event, Reason),
   {noreply, State};
 handle_info(Info, State) ->
-  warning("unhandled info msg ~w", [Info]),
+  '_warning'("unhandled info msg ~w", [Info]),
   {noreply, State}.
 
 %%--------------------------------------------------------------------
