@@ -5,6 +5,7 @@
 
 -export([
   install/3,
+  install/4,
   uninstall/2,
   final/1,
   final/2,
@@ -47,13 +48,11 @@ final(Pid, Event) ->
   ets:insert(?MODULE,  {{final, Pid}, Event}),
   hooks_final:link(Pid).
 
-install(_Event, _Weight, []) ->
-  ok;
-install(Event, Weight, [H | T]) ->
-  install(Event, Weight, H),
-  install(Event, Weight, T);
-install(Event, Weight, HookFun) when is_integer(Weight) ->
-  true = ets:insert(?MODULE, {{Event, Weight}, HookFun}),
+install(Event, Weight, HookFun) ->
+  install(Event, Weight, HookFun, []).
+
+install(Event, Weight, HookFun, PreOpts) ->
+  true = ets:insert(?MODULE, {{Event, Weight}, HookFun, PreOpts}),
   '_debug'("installed hook ~w function handler ~w with weight ~w", [Event, HookFun, Weight]),
   ok.
 
@@ -85,7 +84,7 @@ run(Event, Params, Timeout) ->
 
 run(Pid, Event, Params, Timeout) when is_list(Params) ->
   '_debug'("running handlers for hook ~w with params ~w", [Event, Params]),
-  Hooks = lists:flatten(ets:match(?MODULE, {{Event, '_'}, '$1'})),
+  Hooks = ets:match(?MODULE, {{Event, '_'}, '$1', '$2'}),
   run_hooks(Hooks, [Pid | Params], [], Timeout).
 
 run_final(Reason) ->
@@ -200,8 +199,8 @@ stop(_State) ->
 %%%===================================================================
 run_hooks([], _Params, Answers, _Timeout) ->
   lists:reverse(Answers);
-run_hooks([{Module, Fun} | T], Params, Answers, Timeout) ->
-  {Time, ModAnswer} = timer:tc(Module, Fun, Params ++ [Timeout]),
+run_hooks([[{Module, Fun}, PreOpts] | T], Params, Answers, Timeout) ->
+  {Time, ModAnswer} = timer:tc(Module, Fun, PreOpts ++ Params ++ [Timeout]),
   '_debug'("~w:~w runtime ~wms", [Module, Fun, Time/1000]),
   case ModAnswer of
     stop            -> run_hooks([], Params, Answers, Timeout);
